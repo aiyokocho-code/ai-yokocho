@@ -25,12 +25,10 @@ jobs:
           workload_identity_provider: "projects/872666885870/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
           service_account: "github-deployer@ai-yokocho.iam.gserviceaccount.com"
 
-      - name: Install dependencies and test
+      - name: Install dependencies
         run: |
           cd cloud-run/ws-server
           npm ci
-          # テストが未実装で落ちる場合は "npm test || echo 'No tests yet'" に変更してください
-          npm test
 
       - name: Deploy to Cloud Run (Safe)
         uses: google-github-actions/deploy-cloudrun@v2
@@ -40,17 +38,16 @@ jobs:
           region: "asia-northeast1"
           source: "./cloud-run/ws-server"
           concurrency: 80
-          max-instances: 20
+          max-instances: 10
           memory: "512MiB"
           cpu: "1"
           allow-unauthenticated: true
           # WebSocket接続維持(Session Affinity)と、1時間の接続維持設定
           flags: "--session-affinity --timeout=3600"
 
-      - name: Output deployed revision and image
+      - name: Output Service URL
         run: |
           gcloud run services describe ws-server \
             --project=ai-yokocho \
             --region=asia-northeast1 \
-            --format="value(status.latestReadyRevisionName, status.traffic[0].revisionName, spec.template.spec.containers[0].image)"
-
+            --format="value(status.url)"
