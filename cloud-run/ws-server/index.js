@@ -9,7 +9,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // 開発中はすべて許可
+    origin: "*", // 開発中すべて許可
     methods: ["GET", "POST"]
   }
 });
