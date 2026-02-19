@@ -3,14 +3,26 @@ on:
   push:
     branches:
       - main
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # 1. 依存関係のインストール
+      - name: Install dependencies
+        run: npm ci
+
+      # 2. Next.jsをビルドして 'out' フォルダを生成
+      - name: Build Next.js
+        run: npm run build
+
+      # 3. 生成された 'out' をデプロイ
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AI_YOKOCHO }}
           projectId: ai-yokocho
           channelId: live
+
