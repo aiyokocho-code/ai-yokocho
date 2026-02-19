@@ -1,18 +1,7 @@
-# 軽量な Node.js イメージを使用
-FROM node:20-slim
-
-# アプリケーションディレクトリ作成
+FROM node:18
 WORKDIR /usr/src/app
-
-# パッケージファイルをコピーしてインストール
 COPY package*.json ./
-RUN npm install --only=production
-
-# ソースコードをコピー
-COPY index.js ./
-
-# ポート 8080 を開放
+RUN npm install
+COPY . .
 EXPOSE 8080
-
-# サーバーを起動
-CMD [ "npm", "start" ]
+CMD [ "node", "index.js" ]
