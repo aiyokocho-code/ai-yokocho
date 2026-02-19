@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -102,4 +103,46 @@ export default function Home() {
               borderBottomRightRadius: log.sender === '自分' ? '2px' : '18px',
               borderBottomLeftRadius: log.sender === '自分' ? '18px' : '2px',
               display: 'inline-block',
-              box
+              boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              maxWidth: '80%',
+              wordBreak: 'break-all'
+            }}>
+              {log.text}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 入力フォーム */}
+      <form onSubmit={sendMessage} style={{ display: 'flex', gap: '10px' }}>
+        <input 
+          value={message} 
+          onChange={(e) => setMessage(e.target.value)} 
+          placeholder="AIマスターに話しかける..." 
+          style={{ 
+            flex: 1, 
+            padding: '12px', 
+            borderRadius: '25px', 
+            border: '1px solid #ccc',
+            outline: 'none'
+          }} 
+        />
+        <button 
+          type="submit" 
+          disabled={!socket?.connected}
+          style={{ 
+            padding: '10px 24px', 
+            background: socket?.connected ? '#333' : '#ccc', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '25px', 
+            cursor: socket?.connected ? 'pointer' : 'not-allowed',
+            transition: 'background 0.2s'
+          }}
+        >
+          送信
+        </button>
+      </form>
+    </main>
+  );
+}
