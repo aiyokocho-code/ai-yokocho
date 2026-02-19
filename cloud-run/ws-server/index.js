@@ -32,6 +32,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`listening on *:${PORT}`);
+// 第2引数に '0.0.0.0' を入れるのが Cloud Run の鉄則です
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
 });
