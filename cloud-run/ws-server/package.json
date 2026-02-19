@@ -1,11 +1,14 @@
 {
-  "name": "ws-server",
+  "name": "ai-yokocho-ws-server",
   "version": "1.0.0",
+  "description": "WebSocket server for AI-yokocho",
   "main": "index.js",
-  "dependencies": {
-    "ws": "^8.13.0"
-  },
   "scripts": {
     "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
   }
 }
