@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 // 💡 最後にスラッシュを「入れない」URLで定義してみてください
-const SERVER_URL = "https://ws-server-e542spnjza-an.a.run.app";
+const SERVER_URL = "https://ws-server-872666885870.asia-northeast1.run.app";
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
