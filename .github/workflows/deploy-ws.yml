@@ -42,7 +42,7 @@ jobs:
           memory: "512MiB"
           cpu: "1"
           allow-unauthenticated: true
-          # WebSocket接続維持(Session Affinity)と、1時間の接続維持設定
+          # WebSocket接続維持と1時間のタイムアウト設定
           flags: "--session-affinity --timeout=3600"
 
       - name: Output Service URL
