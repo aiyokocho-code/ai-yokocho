@@ -5,34 +5,28 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// CORS設定を強化
+// CORSを全開放
 const io = new Server(server, {
   cors: {
-    origin: "*", // テストのため一旦すべて許可。本番は "https://your-app-url.web.app" に絞るのが安全
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
+// 起動確認用のルート
 app.get('/', (req, res) => {
-  res.send('AI-Yokocho WS Server is running!');
+  res.send('AI-Yokocho Server is Alive!');
 });
 
 io.on('connection', (socket) => {
-  console.log('a user connected');
-
+  console.log('Connected:', socket.id);
   socket.on('chat message', (msg) => {
-    console.log('message: ' + msg);
-    // AIマスターとしての返信
-    socket.emit('chat message', `AIマスター: 「${msg}」だね。ゆっくりしていきな。`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
+    io.emit('chat message', `AIマスター: ${msg}ですね！いらっしゃい！`);
   });
 });
 
+// Cloud Run用のポート設定
 const PORT = process.env.PORT || 8080;
-// 第2引数に '0.0.0.0' を入れるのが Cloud Run の鉄則です
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Listening on ${PORT}`);
 });
