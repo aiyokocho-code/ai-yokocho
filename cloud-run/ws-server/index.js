@@ -27,6 +27,7 @@ io.on('connection', (socket) => {
 
 // Cloud Run用のポート設定
 const PORT = process.env.PORT || 8080;
+// 第2引数 '0.0.0.0' が絶対に必要です！
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Listening on ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
