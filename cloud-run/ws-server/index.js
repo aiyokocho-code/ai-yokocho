@@ -1,34 +1,37 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
 
 const app = express();
-app.use(cors());
-
 const server = http.createServer(app);
+
+// CORS設定を強化
 const io = new Server(server, {
   cors: {
-    origin: "*", // 開発中すべて許可
+    origin: "*", // テストのため一旦すべて許可。本番は "https://your-app-url.web.app" に絞るのが安全
     methods: ["GET", "POST"]
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('AI-Yokocho WS Server is running!');
+});
+
 io.on('connection', (socket) => {
-  console.log('ユーザーが接続しました:', socket.id);
+  console.log('a user connected');
 
   socket.on('chat message', (msg) => {
-    console.log('メッセージを受信:', msg);
-    // AIマスターからの返信（今はオウム返し）
-    io.emit('chat message', `AIマスター: 「${msg}」だね。ゆっくりしていきな。`);
+    console.log('message: ' + msg);
+    // AIマスターとしての返信
+    socket.emit('chat message', `AIマスター: 「${msg}」だね。ゆっくりしていきな。`);
   });
 
   socket.on('disconnect', () => {
-    console.log('ユーザーが切断しました');
+    console.log('user disconnected');
   });
 });
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`listening on *:${PORT}`);
 });
