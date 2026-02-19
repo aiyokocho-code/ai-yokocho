@@ -3,21 +3,25 @@
 import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-// 💡 最後にスラッシュを「入れない」URLで定義してみてください
+// 💡 先ほどコマンドの結果に出た「最新のURL」です。末尾のスラッシュは無しでOK。
 const SERVER_URL = "https://ws-server-872666885870.asia-northeast1.run.app";
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [message, setMessage] = useState('');
   const [chatLog, setChatLog] = useState<{ sender: string, text: string }[]>([]);
-  const [status, setStatus] = useState('接続試行中...');
+  const [status, setStatus] = useState('接続試行中 (WebSocket強制モード)...');
 
   useEffect(() => {
-    // 💡 オプションを最小限かつ標準的にします
+    console.log("接続を試みています:", SERVER_URL);
+
+    // 💡 接続オプションをCloud Runに最適化
     const newSocket = io(SERVER_URL, {
-      transports: ['websocket', 'polling'], // WebSocketを優先
-      secure: true,
-      reconnection: true
+      transports: ['websocket'], // 最初からWebSocketを使用
+      reconnection: true,
+      reconnectionAttempts: 5,
+      timeout: 30000,             // 30秒まで待つ
+      withCredentials: false      // CORSエラーを回避しやすくする
     });
 
     newSocket.on('connect', () => {
@@ -27,15 +31,23 @@ export default function Home() {
 
     newSocket.on('connect_error', (err) => {
       setStatus(`❌ 接続エラー: ${err.message}`);
-      console.error('Socket Error:', err);
+      console.error('Socket Error Details:', err);
     });
 
     newSocket.on('chat message', (msg: string) => {
       setChatLog((prev) => [...prev, { sender: 'AIマスター', text: msg }]);
     });
 
+    newSocket.on('disconnect', (reason) => {
+      setStatus(`⚠️ 切断されました: ${reason}`);
+    });
+
     setSocket(newSocket);
-    return () => { newSocket.close(); };
+
+    // クリーンアップ
+    return () => {
+      newSocket.close();
+    };
   }, []);
 
   const sendMessage = (e: React.FormEvent) => {
@@ -48,28 +60,46 @@ export default function Home() {
   };
 
   return (
-    <main style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h1>🏮 AI横丁 - 案内所 🏮</h1>
+    <main style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+      <h1 style={{ textAlign: 'center', color: '#333' }}>🏮 AI横丁 - 案内所 🏮</h1>
       
-      <div style={{ padding: '10px', background: status.includes('成功') ? '#e6fffa' : '#fff5f5', marginBottom: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
-        ステータス: <strong>{status}</strong>
+      {/* 接続状況を表示するエリア */}
+      <div style={{ 
+        padding: '12px', 
+        background: status.includes('成功') ? '#e6fffa' : '#fff5f5', 
+        color: status.includes('成功') ? '#2c7a7b' : '#c53030',
+        border: '1px solid',
+        borderColor: status.includes('成功') ? '#b2f5ea' : '#feb2b2',
+        marginBottom: '20px', 
+        borderRadius: '8px',
+        fontSize: '0.9rem',
+        fontWeight: 'bold'
+      }}>
+        ステータス: {status}
       </div>
 
-      <div style={{ border: '1px solid #ccc', height: '350px', overflowY: 'scroll', marginBottom: '20px', padding: '15px', background: '#fdfdfd' }}>
+      {/* チャット履歴 */}
+      <div style={{ 
+        border: '1px solid #ddd', 
+        height: '400px', 
+        overflowY: 'scroll', 
+        marginBottom: '20px', 
+        padding: '15px', 
+        background: 'white',
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {chatLog.length === 0 && <p style={{ color: '#999', textAlign: 'center', marginTop: '150px' }}>まだ会話はありません</p>}
         {chatLog.map((log, i) => (
-          <div key={i} style={{ textAlign: log.sender === '自分' ? 'right' : 'left', marginBottom: '10px' }}>
-            <div style={{ fontSize: '0.7rem', color: '#888' }}>{log.sender}</div>
-            <p style={{ background: log.sender === '自分' ? '#0070f3' : '#eee', color: log.sender === '自分' ? 'white' : 'black', padding: '8px 12px', borderRadius: '15px', display: 'inline-block', margin: '4px 0' }}>
-              {log.text}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <form onSubmit={sendMessage} style={{ display: 'flex', gap: '5px' }}>
-        <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="メッセージを入力..." style={{ flex: 1, padding: '10px' }} />
-        <button type="submit" style={{ padding: '10px 20px', background: '#333', color: '#white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>送信</button>
-      </form>
-    </main>
-  );
-}
+          <div key={i} style={{ textAlign: log.sender === '自分' ? 'right' : 'left', marginBottom: '15px' }}>
+            <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '2px' }}>{log.sender}</div>
+            <div style={{ 
+              background: log.sender === '自分' ? '#0070f3' : '#edf2f7', 
+              color: log.sender === '自分' ? 'white' : '#2d3748', 
+              padding: '10px 14px', 
+              borderRadius: '18px', 
+              borderBottomRightRadius: log.sender === '自分' ? '2px' : '18px',
+              borderBottomLeftRadius: log.sender === '自分' ? '18px' : '2px',
+              display: 'inline-block',
+              box
