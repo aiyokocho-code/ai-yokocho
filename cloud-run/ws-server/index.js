@@ -5,42 +5,39 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// 💡 Socket.ioの設定を強化
 const io = new Server(server, {
   cors: {
-    origin: "*", // 開発中は全許可。本番はFirebaseのURLを指定するとより安全です
+    // すべてのオリジンからの接続を許可し、認証情報（Cookie等）も通す設定
+    origin: true, 
     methods: ["GET", "POST"],
     credentials: true
   },
-  // 💡 Cloud Runやプロキシ経由の接続を安定させるためのオプション
-  allowEIO3: true,           // 古いクライアントとの互換性
-  pingTimeout: 60000,        // タイムアウトを長めに設定（60秒）
-  pingInterval: 25000,       // ヘルスチェックの間隔（25秒）
-  transports: ['websocket']  // WebSocketを優先
+  // Cloud Runのセッション維持を助け、接続エラーを防ぐための設定
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
-// 起動確認用のルート
 app.get('/', (req, res) => {
   res.send('AI-Yokocho Server is Alive!');
 });
 
-// 接続時の処理
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+  console.log('User connected:', socket.id);
 
   socket.on('chat message', (msg) => {
-    console.log('Message received:', msg);
-    // 全員にメッセージを送信（自分含む）
+    console.log('Message:', msg);
+    // 全員にメッセージを送信（動作確認用）
     io.emit('chat message', msg);
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('Client disconnected. Reason:', reason);
+    console.log('User disconnected:', reason);
   });
 });
 
-// Cloud Run指定のポート、または8080で待機
 const PORT = process.env.PORT || 8080;
+// 0.0.0.0 を指定して外部からの接続を待ち受ける
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
