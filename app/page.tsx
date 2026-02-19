@@ -42,7 +42,7 @@ export default function Home() {
 
   return (
     <main style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h1 style={{ borderBottom: '2px solid #333', paddingBottom: '10px' }}>🏮 AI横丁 - 案内所 🏮</h1>
+      <h1 style={{ borderBottom: '2px solid #333', paddingBottom: '10px' }}>🏮 AI横丁 - 案内所（テスト中） 🏮</h1>
       
       <div style={{ 
         border: '1px solid #ccc', 
