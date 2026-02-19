@@ -1,38 +1,36 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-// 💡 先ほどコマンドの結果に出た「最新のURL」です。末尾のスラッシュは無しでOK。
+// 💡 Cloud Runの最新URL
 const SERVER_URL = "https://ws-server-872666885870.asia-northeast1.run.app";
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [message, setMessage] = useState('');
   const [chatLog, setChatLog] = useState<{ sender: string, text: string }[]>([]);
-  const [status, setStatus] = useState('接続試行中 (WebSocket強制モード)...');
+  const [status, setStatus] = useState('接続中...');
 
   useEffect(() => {
-    console.log("接続を試みています:", SERVER_URL);
-
-    // 💡 接続オプションをCloud Runに最適化
+    // 💡 接続設定を最も安定する「WebSocket固定モード」に
     const newSocket = io(SERVER_URL, {
-      transports: ['websocket'], // 最初からWebSocketを使用
+      transports: ['websocket'],
+      upgrade: false,      // HTTPからのアップグレードを禁止（ループ防止）
       reconnection: true,
-      reconnectionAttempts: 5,
-      timeout: 30000,             // 30秒まで待つ
-      withCredentials: false      // CORSエラーを回避しやすくする
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+      timeout: 20000,
     });
 
     newSocket.on('connect', () => {
       setStatus('✅ 接続成功！AIマスターがお店を開きました');
-      console.log('Connected! ID:', newSocket.id);
+      console.log('Connected to server!');
     });
 
     newSocket.on('connect_error', (err) => {
       setStatus(`❌ 接続エラー: ${err.message}`);
-      console.error('Socket Error Details:', err);
+      console.error('Connection Error:', err);
     });
 
     newSocket.on('chat message', (msg: string) => {
@@ -40,12 +38,16 @@ export default function Home() {
     });
 
     newSocket.on('disconnect', (reason) => {
-      setStatus(`⚠️ 切断されました: ${reason}`);
+      console.log('Disconnected:', reason);
+      if (reason === 'io server disconnect') {
+        // サーバー側から切断された場合は手動で再接続
+        newSocket.connect();
+      }
+      setStatus('⚠️ 再接続を試みています...');
     });
 
     setSocket(newSocket);
 
-    // クリーンアップ
     return () => {
       newSocket.close();
     };
@@ -61,51 +63,48 @@ export default function Home() {
   };
 
   return (
-    <main style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
-      <h1 style={{ textAlign: 'center', color: '#333' }}>🏮 AI横丁 - 案内所 🏮</h1>
-      
-      {/* 接続状況を表示するエリア */}
-      <div style={{ 
-        padding: '12px', 
-        background: status.includes('成功') ? '#e6fffa' : '#fff5f5', 
-        color: status.includes('成功') ? '#2c7a7b' : '#c53030',
-        border: '1px solid',
-        borderColor: status.includes('成功') ? '#b2f5ea' : '#feb2b2',
-        marginBottom: '20px', 
-        borderRadius: '8px',
-        fontSize: '0.9rem',
-        fontWeight: 'bold'
-      }}>
-        ステータス: {status}
-      </div>
+    <main style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: '#f4f4f9', minHeight: '100vh' }}>
+      <header style={{ marginBottom: '30px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2rem', color: '#2d3748' }}>🏮 AI横丁 - 案内所</h1>
+        <div style={{ 
+          display: 'inline-block',
+          padding: '8px 16px', 
+          background: status.includes('成功') ? '#c6f6d5' : '#fed7d7', 
+          color: status.includes('成功') ? '#22543d' : '#822727',
+          borderRadius: '20px',
+          fontSize: '0.85rem',
+          fontWeight: 'bold'
+        }}>
+          {status}
+        </div>
+      </header>
 
-      {/* チャット履歴 */}
       <div style={{ 
-        border: '1px solid #ddd', 
-        height: '400px', 
-        overflowY: 'scroll', 
+        border: '1px solid #e2e8f0', 
+        height: '450px', 
+        overflowY: 'auto', 
         marginBottom: '20px', 
-        padding: '15px', 
+        padding: '20px', 
         background: 'white',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column'
+        borderRadius: '12px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
       }}>
-        {chatLog.length === 0 && <p style={{ color: '#999', textAlign: 'center', marginTop: '150px' }}>まだ会話はありません</p>}
+        {chatLog.length === 0 && (
+          <div style={{ color: '#a0aec0', textAlign: 'center', marginTop: '180px' }}>
+            マスターに何か話しかけてみて！
+          </div>
+        )}
         {chatLog.map((log, i) => (
           <div key={i} style={{ textAlign: log.sender === '自分' ? 'right' : 'left', marginBottom: '15px' }}>
-            <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '2px' }}>{log.sender}</div>
+            <div style={{ fontSize: '0.7rem', color: '#718096', marginBottom: '4px', marginRight: '10px', marginLeft: '10px' }}>{log.sender}</div>
             <div style={{ 
-              background: log.sender === '自分' ? '#0070f3' : '#edf2f7', 
+              background: log.sender === '自分' ? '#4a90e2' : '#edf2f7', 
               color: log.sender === '自分' ? 'white' : '#2d3748', 
-              padding: '10px 14px', 
-              borderRadius: '18px', 
-              borderBottomRightRadius: log.sender === '自分' ? '2px' : '18px',
-              borderBottomLeftRadius: log.sender === '自分' ? '18px' : '2px',
+              padding: '10px 16px', 
+              borderRadius: '15px', 
               display: 'inline-block',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
               maxWidth: '80%',
-              wordBreak: 'break-all'
+              lineHeight: '1.4'
             }}>
               {log.text}
             </div>
@@ -113,17 +112,17 @@ export default function Home() {
         ))}
       </div>
 
-      {/* 入力フォーム */}
       <form onSubmit={sendMessage} style={{ display: 'flex', gap: '10px' }}>
         <input 
           value={message} 
           onChange={(e) => setMessage(e.target.value)} 
-          placeholder="AIマスターに話しかける..." 
+          placeholder="メッセージを入力..." 
           style={{ 
             flex: 1, 
-            padding: '12px', 
-            borderRadius: '25px', 
-            border: '1px solid #ccc',
+            padding: '14px', 
+            borderRadius: '10px', 
+            border: '1px solid #cbd5e0',
+            fontSize: '1rem',
             outline: 'none'
           }} 
         />
@@ -131,16 +130,16 @@ export default function Home() {
           type="submit" 
           disabled={!socket?.connected}
           style={{ 
-            padding: '10px 24px', 
-            background: socket?.connected ? '#333' : '#ccc', 
+            padding: '0 25px', 
+            background: socket?.connected ? '#2d3748' : '#cbd5e0', 
             color: 'white', 
             border: 'none', 
-            borderRadius: '25px', 
+            borderRadius: '10px', 
             cursor: socket?.connected ? 'pointer' : 'not-allowed',
-            transition: 'background 0.2s'
+            fontWeight: 'bold'
           }}
         >
-          送信
+          送る
         </button>
       </form>
     </main>
