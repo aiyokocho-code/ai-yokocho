@@ -10,7 +10,7 @@ COPY package*.json ./
 # 本番用依存だけインストール
 RUN npm install --production
 
-# 残りのソースコードをコピー
+# 残りのソースコードをコピーだ
 COPY . .
 
 # Cloud Run が使うポート
