@@ -9,7 +9,7 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.json({ 
     status: "success",
-    message: "Cloud Runへの接続成功！マスターの店、準備中やで。",
+    message: "Cloud Runへの接続成功！今、準備中や。",
     timestamp: new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })
   });
 });
